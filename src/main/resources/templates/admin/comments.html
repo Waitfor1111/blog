@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!--移动端的预览设置，用于适配移动端-->
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
+    <link rel="stylesheet" href="/css/myblog.css">
+    <title>后台管理</title>
+
+
+</head>
+<body id="body">
+<!--导航-->
+<div th:replace="~{admin/manage::adminNav}"></div>
+
+
+<!--中间内容-->
+<div class="m-container-small m-padded-tb-big">
+    <div class="ui container">
+        <div action="#" class="ui form segment inverted" method="post">
+            <div class="fields inline">
+                <div class="field">
+                    <input type="text" name="blog" placeholder="文章名称">
+                </div>
+
+
+                <div class="field right aligned">
+                    <button class="ui small teal basic button" onclick="search()"><i class="search icon"></i>搜索
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="table-container">
+            <table th:fragment="table_refresh" th:id="id_table_refresh" class="ui table inverted celled center aligned">
+                <thread>
+                    <tr>
+                        <th></th>
+                        <th>评论用户名称</th>
+                        <th>文章</th>
+                        <th>评论内容</th>
+                        <th>更新时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thread>
+                <tbody>
+                <tr th:each="comment,iter:${pageInfo.getList()}">
+                    <td th:text="${iter.index+1}">1</td>
+                    <td th:text="${comment.getReplyName()}">追梦</td>
+                    <td th:text="${comment.getBlogId()}">【一年总结】记我的大一生活</td>
+                    <td th:text="${comment.getReplyContent()}">厉害！</td>
+                    <td th:text="${#dates.format(comment.getCreateTime(),'yyyy-MM-dd HH:mm')}">2020-7-04 15:12</td>
+                    <td>
+                        <a class="ui button  teal basic mini " th:href="'/admin/comments-details/'+${comment.getId()}">详情</a>
+                        <a class="ui button  red basic mini " th:attr="data-id=${comment.getId()}"
+                           onclick="deleteComment(this)">删除</a>
+                    </td>
+
+                </tbody>
+                <tfoot>
+                <tr>
+                    <th colspan="6">
+                        <div class="ui pagination menu mini">
+                            <a href="#" class="ui item " onclick="pre()">上一页</a>
+                            <a href="#" class="ui item " onclick="next()">下一页</a>
+                        </div>
+                    </th>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<!--底部footer-->
+<div th:replace="~{index::footer}"></div>
+
+
+<script src="/js/jquery-3.5.1.min.js"></script>
+<script src="/Semantic-UI-CSS-master/semantic.min.js"></script>
+<script type="text/javascript">
+
+
+
+    // 导航菜单中
+    $("#b1").click(function () {
+        $(".m-item").toggleClass("m-mobile-hide");
+    });
+
+    $('.ui.dropdown').dropdown({
+        on: 'hover'
+    })
+
+
+    // 页面默认数据
+    var pageNum = 1;
+
+    // 搜索
+    function search() {
+        // 搜索重置当前页
+        pageNum = 1;
+        loadData();
+    }
+
+    function next() {
+        if (pageNum >= $("[name='maxPage']").val()) {
+            return;
+        }
+        pageNum++;
+        loadData();
+    }
+
+    function pre() {
+        if (pageNum <= 1) {
+            pageNum = 1;
+            return;
+        }
+        pageNum--;
+        loadData();
+    }
+    // $("#b1").click(function () {
+    //     $(".m-item").toggleClass("m-mobile-hide");
+    // });
+    //
+    // $('.ui.dropdown').dropdown({
+    //     on: 'hover'
+    // })
+    //
+    //
+    // // 页面默认数据
+    // var pageNum = 1;
+    //
+    // // 搜索
+    // function search() {
+    //     // 搜索重置当前页
+    //     pageNum = 1;
+    //     loadData();
+    // }
+    //
+    // function next() {
+    //     if (pageNum >= $("[name='maxPage']").val()) {
+    //         return;
+    //     }
+    //     pageNum++;
+    //     loadData();
+    // }
+    //
+    // function pre() {
+    //     if (pageNum <= 1) {
+    //         pageNum = 1;
+    //         return;
+    //     }
+    //     pageNum--;
+    //     loadData();
+    // }
+
+    function loadData() {
+        $.ajax({
+            url: "/admin/findConditionByComment",
+            // type 专栏 分类
+            data: {"pageNum": pageNum, name: $("[name='name']").val()},
+            type: "get",
+            success: function (result) {
+
+                // 只刷新博客展示部分，其他地方不变
+                // ajax返回数据的时候，页面模板只需要返回对应数据片段就可以
+                $("#table-container").html(result);
+            }
+        })
+    }
+
+
+    function deleteComment(button) {
+        $.ajax({
+            url: "/admin/comment",
+            data: {
+                "id": $(button).attr("data-id"),
+                "pageNum": pageNum
+            },
+            type: "delete",
+
+            success: function (result) {
+                $("#table-container").html(result);
+            }
+        })
+    }
+
+
+</script>
+</body>
+</html>
